@@ -6,3 +6,37 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL) # Create a database engine that means we can connect to the database and execute SQL queries. The engine is created using the connection string stored in the DATABASE_URL environment variable.
+
+def save_applicant(data: dict) -> int: # -> int: means this function returns an integer, which is the new applicant's ID
+    """Inserts an applicant row, returns the new id."""
+    query = text(""" 
+        INSERT INTO applicants (gender, married, dependents, education, self_employed,
+                                 applicant_income, coapplicant_income, loan_amount,
+                                 loan_amount_term, credit_history, property_area)
+        VALUES (:gender, :married, :dependents, :education, :self_employed,
+                :applicant_income, :coapplicant_income, :loan_amount,
+                :loan_amount_term, :credit_history, :property_area)
+        RETURNING id
+    """)
+    #text() is used to create a SQL statement that can be executed against the database.
+    #  The placeholders (e.g., :gender, :married) are used to safely pass parameters to the SQL query, 
+    #preventing SQL injection attacks. The RETURNING id clause allows us to get the ID of the newly inserted applicant.
+    with engine.connect() as conn: # engine.connect() establishes a connection to the database. The with statement ensures that the connection is properly closed after the block of code is executed, even if an error occurs.
+        result = conn.execute(query, data) # Execute the query with the provided data. it doesnt automatically commit the transaction, so we need to call conn.commit() to save the changes to the database. The result object contains the result of the query execution, which we can use to retrieve the newly inserted applicant's ID.
+        conn.commit() # Commit the transaction to save the changes to the database. This is important because, without committing, the changes would not be persisted in the database.
+        return result.scalar_one() # scalar_one() retrieves the first column of the first row from the result set, which in this case is the ID of the newly inserted applicant. If no rows are returned, it raises an exception. This ensures that we get a single integer value representing the new applicant's ID.
+
+
+def save_prediction(applicant_id: int, loan_status: str, probability: float):
+    """Inserts a prediction row linked to an applicant."""
+    query = text("""
+        INSERT INTO predictions (applicant_id, loan_status, approval_probability)
+        VALUES (:applicant_id, :loan_status, :approval_probability)
+    """)
+    with engine.connect() as conn:
+        conn.execute(query, {
+            "applicant_id": applicant_id,
+            "loan_status": loan_status,
+            "approval_probability": probability
+        })
+        conn.commit()
