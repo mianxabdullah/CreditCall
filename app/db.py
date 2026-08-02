@@ -47,3 +47,11 @@ def get_all_applicants():
     with engine.connect() as conn:
         result = conn.execute(query)
         return [dict(row._mapping) for row in result] # The list comprehension iterates over each row in the result set, converting each row into a dictionary using row._mapping. This allows us to return a list of dictionaries, where each dictionary represents an applicant's data, making it easier to work with in the API response.
+
+
+def get_applicant_by_id(applicant_id: int):
+    query = text("SELECT * FROM applicants WHERE id = :id")
+    with engine.connect() as conn:
+        result = conn.execute(query, {"id": applicant_id})
+        row = result.mappings().first() # The result.mappings() method returns an iterable of dictionaries, where each dictionary represents a row in the result set. The first() method retrieves the first row from the result set, or None if there are no rows. This allows us to get the applicant's data as a dictionary if it exists, or None if the applicant with the specified ID does not exist in the database.
+        return dict(row) if row else None
