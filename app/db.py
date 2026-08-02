@@ -40,3 +40,10 @@ def save_prediction(applicant_id: int, loan_status: str, probability: float):
             "approval_probability": probability
         })
         conn.commit()
+
+
+def get_all_applicants():
+    query = text("SELECT * FROM applicants ORDER BY created_at DESC")
+    with engine.connect() as conn:
+        result = conn.execute(query)
+        return [dict(row._mapping) for row in result] # The list comprehension iterates over each row in the result set, converting each row into a dictionary using row._mapping. This allows us to return a list of dictionaries, where each dictionary represents an applicant's data, making it easier to work with in the API response.
