@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Header,Depends
 from app.schemas import LoanApplication 
 import pandas as pd
 from app.preprocess import preprocess 
-from app.db import save_applicant, save_prediction
+from app.db import save_applicant, save_prediction, get_all_applicants
 import joblib
 import os
 from dotenv import load_dotenv
@@ -69,5 +69,9 @@ def predict(application: LoanApplication):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.get("/applicants", dependencies=[Depends(verify_api_key)])
+def list_applicants():
+    return get_all_applicants()
 
 
