@@ -55,3 +55,19 @@ def get_applicant_by_id(applicant_id: int):
         result = conn.execute(query, {"id": applicant_id})
         row = result.mappings().first() # The result.mappings() method returns an iterable of dictionaries, where each dictionary represents a row in the result set. The first() method retrieves the first row from the result set, or None if there are no rows. This allows us to get the applicant's data as a dictionary if it exists, or None if the applicant with the specified ID does not exist in the database.
         return dict(row) if row else None
+
+def update_applicant(applicant_id: int, data: dict) -> bool:
+    query = text("""
+        UPDATE applicants
+        SET gender = :gender, married = :married, dependents = :dependents,
+            education = :education, self_employed = :self_employed,
+            applicant_income = :applicant_income, coapplicant_income = :coapplicant_income,
+            loan_amount = :loan_amount, loan_amount_term = :loan_amount_term,
+            credit_history = :credit_history, property_area = :property_area
+        WHERE id = :id
+    """)
+    data["id"] = applicant_id
+    with engine.connect() as conn:
+        result = conn.execute(query, data)
+        conn.commit()
+        return result.rowcount > 0
