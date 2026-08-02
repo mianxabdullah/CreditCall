@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Header,Depends
-from app.schemas import LoanApplication 
+from app.schemas import LoanApplication , ApplicantUpdate
 import pandas as pd
 from app.preprocess import preprocess 
-from app.db import save_applicant, save_prediction, get_all_applicants,get_applicant_by_id
+from app.db import save_applicant, save_prediction, get_all_applicants,get_applicant_by_id, update_applicant
 import joblib
 import os
 from dotenv import load_dotenv
@@ -33,6 +33,7 @@ def home():
 def health_check():
     return {"status": "Healthy",
             "version": "1.0.0",}
+
 
 @app.post("/predict", dependencies=[Depends(verify_api_key)])
 def predict(application: LoanApplication):
@@ -69,10 +70,12 @@ def predict(application: LoanApplication):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+    
 
 @app.get("/applicants", dependencies=[Depends(verify_api_key)])
 def list_applicants():
     return get_all_applicants()
+
 
 @app.get("/applicants/{applicant_id}", dependencies=[Depends(verify_api_key)])
 def read_applicant(applicant_id: int):
@@ -80,5 +83,27 @@ def read_applicant(applicant_id: int):
     if applicant is None:
         raise HTTPException(status_code=404, detail="Applicant not found")
     return applicant
+
+
+@app.put("/applicants/{applicant_id}", dependencies=[Depends(verify_api_key)])
+def edit_applicant(applicant_id: int, applicant: ApplicantUpdate):
+    # Convert the Pydantic model to a dictionary and prepare the data for the update operation
+    data = {
+        "gender": applicant.Gender,
+        "married": applicant.Married,
+        "dependents": applicant.Dependents,
+        "education": applicant.Education,
+        "self_employed": applicant.Self_Employed,
+        "applicant_income": applicant.ApplicantIncome,
+        "coapplicant_income": applicant.CoapplicantIncome,
+        "loan_amount": applicant.LoanAmount,
+        "loan_amount_term": applicant.Loan_Amount_Term,
+        "credit_history": applicant.Credit_History,
+        "property_area": applicant.Property_Area,
+    }
+    updated = update_applicant(applicant_id, data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return get_applicant_by_id(applicant_id)
 
 
