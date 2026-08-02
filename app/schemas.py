@@ -15,4 +15,7 @@ class LoanApplication(BaseModel):
     Credit_History: Literal[0, 1]
     Property_Area: Literal["Urban", "Semiurban", "Rural"]
 
+# ApplicantUpdate is identical in shape to LoanApplication — reuse it directly, instead of duplicating every field again.
+ApplicantUpdate = LoanApplication
+
 
