@@ -78,3 +78,15 @@ def delete_applicant(applicant_id: int) -> bool:
         result = conn.execute(query, {"id": applicant_id})
         conn.commit()
         return result.rowcount > 0
+
+def get_all_predictions():
+    query = text("""
+        SELECT p.id, p.applicant_id, p.loan_status, p.approval_probability, p.created_at,
+               a.gender, a.applicant_income, a.property_area
+        FROM predictions p
+        JOIN applicants a ON p.applicant_id = a.id
+        ORDER BY p.created_at DESC
+    """)
+    with engine.connect() as conn:
+        result = conn.execute(query)
+        return [dict(row._mapping) for row in result]
