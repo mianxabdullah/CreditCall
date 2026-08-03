@@ -71,3 +71,10 @@ def update_applicant(applicant_id: int, data: dict) -> bool:
         result = conn.execute(query, data)
         conn.commit()
         return result.rowcount > 0
+
+def delete_applicant(applicant_id: int) -> bool:
+    query = text("DELETE FROM applicants WHERE id = :id")
+    with engine.connect() as conn:
+        result = conn.execute(query, {"id": applicant_id})
+        conn.commit()
+        return result.rowcount > 0
