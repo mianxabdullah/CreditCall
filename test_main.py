@@ -38,4 +38,30 @@ def test_predict_with_wrong_api_key_is_rejected():
     )
     assert response.status_code == 401
 
+def test_predict_with_valid_data():
+    """A correctly-formed request with the right API key should succeed
+    and return a loan_status field."""
+    response = client.post(
+        "/predict",
+        headers={"x-api-key": API_KEY},
+        json=VALID_APPLICANT
+    )
+    assert response.status_code == 200
+    assert "loan_status" in response.json()
+    assert response.json()["loan_status"] in ["Approved", "Rejected"]
 
+
+def test_predict_with_invalid_gender_is_rejected():
+    """Pydantic should reject a Gender value outside the allowed Literal options."""
+    bad_applicant = {**VALID_APPLICANT, "Gender": "banana"}
+    response = client.post(
+        "/predict",
+        headers={"x-api-key": API_KEY},
+        json=bad_applicant
+    )
+    assert response.status_code == 422
+
+
+def test_get_nonexistent_applicant_returns_404():
+    response = client.get("/applicants/999999", headers={"x-api-key": API_KEY})
+    assert response.status_code == 404
