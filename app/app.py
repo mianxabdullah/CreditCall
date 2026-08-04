@@ -188,6 +188,13 @@ async def predict_loan_file(file: UploadFile = File(...)):
 
         df['Status'] = statuses
 
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        return StreamingResponse(
+            output, media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=predictions.csv"}
+        )
 
     except HTTPException:
         raise
