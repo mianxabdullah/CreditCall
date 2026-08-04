@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header,Depends
+from fastapi import FastAPI, HTTPException, Header,Depends,UploadFile, File
 from app.schemas import LoanApplication , ApplicantUpdate
 import pandas as pd
 from app.preprocess import preprocess 
@@ -6,6 +6,8 @@ from app.db import (save_applicant, save_prediction, get_all_applicants,get_appl
                     delete_applicant,get_all_predictions,get_predictions_by_applicant)
 import joblib
 import os
+import io
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -124,5 +126,22 @@ def read_predictions_for_applicant(applicant_id: int):
     if applicant is None:
         raise HTTPException(status_code=404, detail="Applicant not found")
     return get_predictions_by_applicant(applicant_id)
+
+
+@app.post("/predict_file", dependencies=[Depends(verify_api_key)])
+async def predict_loan_file(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file format. Please upload a CSV file.")
+
+    try:
+        df = pd.read_csv(file.file)
+
+
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 
 
