@@ -155,6 +155,18 @@ async def predict_loan_file(file: UploadFile = File(...)):
 
         scaled, missing_features = preprocess(df, scaler, model_columns)
 
+        if missing_features:
+            raise HTTPException(
+                status_code=400,
+                detail={"message": "CSV is missing required columns", "missing_features": missing_features}
+            )
+
+        predictions = model.predict(scaled)
+        probabilities = model.predict_proba(scaled)[:, 1]
+
+        
+
+
 
     except HTTPException:
         raise
