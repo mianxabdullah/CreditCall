@@ -136,6 +136,24 @@ async def predict_loan_file(file: UploadFile = File(...)):
     try:
         df = pd.read_csv(file.file)
 
+        if df.empty:
+            raise HTTPException(status_code=400, detail="CSV file is empty.")
+
+        if 'Loan_ID' in df.columns:
+            df = df.drop('Loan_ID', axis=1)
+
+        for col in ['Gender', 'Married', 'Dependents', 'Self_Employed']:
+            df[col] = df[col].fillna(df[col].mode()[0])
+
+        df['Credit_History'] = df['Credit_History'].fillna(df['Credit_History'].mode()[0])
+        df['LoanAmount'] = df['LoanAmount'].fillna(df['LoanAmount'].median())
+        df['Loan_Amount_Term'] = df['Loan_Amount_Term'].fillna(df['Loan_Amount_Term'].mode()[0])
+
+        raw_rows = df[['Gender', 'Married', 'Dependents', 'Education', 'Self_Employed',
+                        'ApplicantIncome', 'CoapplicantIncome', 'LoanAmount',
+                        'Loan_Amount_Term', 'Credit_History', 'Property_Area']].copy()
+
+        scaled, missing_features = preprocess(df, scaler, model_columns)
 
 
     except HTTPException:
