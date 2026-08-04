@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException, Header,Depends
 from app.schemas import LoanApplication , ApplicantUpdate
 import pandas as pd
 from app.preprocess import preprocess 
-from app.db import save_applicant, save_prediction, get_all_applicants,get_applicant_by_id, update_applicant,delete_applicant,get_all_predictions
+from app.db import (save_applicant, save_prediction, get_all_applicants,get_applicant_by_id, update_applicant,
+                    delete_applicant,get_all_predictions,get_predictions_by_applicant)
 import joblib
 import os
 from dotenv import load_dotenv
@@ -116,5 +117,12 @@ def remove_applicant(applicant_id: int):
 @app.get("/predictions", dependencies=[Depends(verify_api_key)])
 def list_predictions():
     return get_all_predictions()
+
+@app.get("/predictions/{applicant_id}", dependencies=[Depends(verify_api_key)])
+def read_predictions_for_applicant(applicant_id: int):
+    applicant = get_applicant_by_id(applicant_id)
+    if applicant is None:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return get_predictions_by_applicant(applicant_id)
 
 
