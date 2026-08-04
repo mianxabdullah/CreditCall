@@ -90,3 +90,14 @@ def get_all_predictions():
     with engine.connect() as conn:
         result = conn.execute(query)
         return [dict(row._mapping) for row in result]
+ 
+def get_predictions_by_applicant(applicant_id: int):
+    query = text("""
+        SELECT id, applicant_id, loan_status, approval_probability, created_at
+        FROM predictions
+        WHERE applicant_id = :applicant_id
+        ORDER BY created_at DESC
+    """)
+    with engine.connect() as conn:
+        result = conn.execute(query, {"applicant_id": applicant_id})
+        return [dict(row._mapping) for row in result]
