@@ -164,8 +164,29 @@ async def predict_loan_file(file: UploadFile = File(...)):
         predictions = model.predict(scaled)
         probabilities = model.predict_proba(scaled)[:, 1]
 
-        
+        statuses = []
+        for i in range(len(predictions)):
+            loan_status = "Approved" if predictions[i] == 1 else "Rejected"
+            probability = round(float(probabilities[i]), 4)
+            statuses.append(loan_status)
 
+            row = raw_rows.iloc[i]
+            applicant_id = save_applicant({
+                "gender": row["Gender"],
+                "married": row["Married"],
+                "dependents": str(row["Dependents"]),
+                "education": row["Education"],
+                "self_employed": row["Self_Employed"],
+                "applicant_income": float(row["ApplicantIncome"]),
+                "coapplicant_income": float(row["CoapplicantIncome"]),
+                "loan_amount": float(row["LoanAmount"]),
+                "loan_amount_term": float(row["Loan_Amount_Term"]),
+                "credit_history": int(row["Credit_History"]),
+                "property_area": row["Property_Area"],
+            })
+            save_prediction(applicant_id, loan_status, probability)
+
+        df['Status'] = statuses
 
 
     except HTTPException:
