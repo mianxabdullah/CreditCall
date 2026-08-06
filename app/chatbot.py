@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+from app.db import get_chat_history
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -79,5 +80,15 @@ SUBMIT_TOOL = {
         }
     }
 }
+
+def get_or_create_conversation(session_id: str) -> list[dict]:
+    """
+    Loads this session's conversation from Postgres. If none exists yet,
+    starts a fresh one with just the system prompt.
+    """
+    history = get_chat_history(session_id)
+    if history is None:
+        history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    return history
 
 
