@@ -101,3 +101,14 @@ def get_predictions_by_applicant(applicant_id: int):
     with engine.connect() as conn:
         result = conn.execute(query, {"applicant_id": applicant_id})
         return [dict(row._mapping) for row in result]
+
+# For chat history persistence, we store the entire conversation as a JSON string in a single column. 
+# This is simpler than creating a separate table for each message, and it allows us to easily retrieve
+#  and restore the conversation state for a given session ID.
+
+def get_chat_history(session_id: str):
+    query = text("SELECT history FROM chat_sessions WHERE session_id = :id")
+    with engine.connect() as conn:
+        result = conn.execute(query, {"id": session_id})
+        row = result.mappings().first()
+        return row["history"] if row else None
