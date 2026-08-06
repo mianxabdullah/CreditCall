@@ -53,7 +53,31 @@ if anything is, and you should then ask the applicant for those specific
 missing items. Never invent or default a value yourself; only ever use
 values the applicant has actually stated. Ask for a few fields at a time,
 keep your tone brief and warm.
-
 """
+
+SUBMIT_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "submit_loan_application",
+        "description": "Submit the loan application with whatever fields have been collected so far. It's fine to call this even if some fields are still missing — the system will tell you which ones and you can continue the conversation.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "Gender": {"type": "string", "enum": ["Male", "Female"]},
+                "Married": {"type": "string", "enum": ["Yes", "No"]},
+                "Dependents": {"type": "string", "enum": ["0", "1", "2", "3+"]},
+                "Education": {"type": "string", "enum": ["Graduate", "Not Graduate"]},
+                "Self_Employed": {"type": "string", "enum": ["Yes", "No"]},
+                "ApplicantIncome": {"type": "number"},
+                "CoapplicantIncome": {"type": "number"},
+                "LoanAmount": {"type": "number"},
+                "Loan_Amount_Term": {"type": "number"},
+                "Credit_History": {"type": "integer", "enum": [0, 1]},
+                "Property_Area": {"type": "string", "enum": ["Urban", "Semiurban", "Rural"]}
+            }
+            # Deliberately no "required" list here requiring all fields causes a hard 400 error the moment the model calls the tool with anything missing 
+        }
+    }
+}
 
 
