@@ -122,4 +122,27 @@ def chat_turn(session_id: str, user_message: str, _depth: int = 0):
     except Exception as e:
         return {"type": "message", "text": f"(Assistant is having trouble responding right now: {str(e)})"}
 
+    message = response.choices[0].message # Response from LLM
+
+    # Build the assistant's history entry manually rather than using model_dump() to avoid including the tool_call
+    # field when its not called because groq-python will throw an error when trying to serialize the 
+    # tool_call field as None. So, we only include the tool_calls field in the assistant's history entry if there are 
+    # actual tool calls present in the message.
+
+    assistant_entry = {"role": "assistant", "content": message.content}
+    if message.tool_calls:
+        assistant_entry["tool_calls"] = [
+            {
+                "id": tc.id,
+                "type": "function",
+                "function": {"name": tc.function.name, "arguments": tc.function.arguments}
+            }
+            for tc in message.tool_calls
+        ]
+    history.append(assistant_entry)
+
+    if not message.tool_calls:
+        save_chat_history(session_id, history)
+        return {"type": "message", "text": message.content or ""}
+
     
