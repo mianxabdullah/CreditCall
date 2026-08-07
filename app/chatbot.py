@@ -162,4 +162,8 @@ def chat_turn(session_id: str, user_message: str, _depth: int = 0):
         # Call again so the model turns that into a natural question.
         return chat_turn(session_id, user_message, _depth=_depth + 1)
 
+    # All fields present —save history as-is (main.py will call reset_conversation once the prediction is actually submitted).
+    save_chat_history(session_id, history)
+    return {"type": "ready_to_submit", "fields": fields}
+
     
