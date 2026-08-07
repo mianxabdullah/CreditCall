@@ -1,3 +1,4 @@
+from email.mime import message
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -144,5 +145,21 @@ def chat_turn(session_id: str, user_message: str, _depth: int = 0):
     if not message.tool_calls:
         save_chat_history(session_id, history)
         return {"type": "message", "text": message.content or ""}
+
+    call = message.tool_calls[0]
+    fields = json.loads(call.function.arguments)
+
+    missing = [f for f in ALL_FIELDS if f not in fields or fields[f] in (None, "")]
+
+    if missing:
+        missing_labels = ", ".join(FIELD_LABELS[f] for f in missing) # Create a comma-separated string of the human-readable labels for the missing fields. This is done by looking up each missing field in the FIELD_LABELS dictionary, which maps the internal field names to more user-friendly descriptions. The resulting string will be used to inform the applicant about which specific items are still needed to complete the loan application.
+        history.append({
+            "role": "tool",
+            "tool_call_id": call.id,
+            "content": f"Cannot submit yet. Still missing: {missing_labels}. Ask the applicant for these specific items next."
+        })
+        save_chat_history(session_id, history)
+        # Call again so the model turns that into a natural question.
+        return chat_turn(session_id, user_message, _depth=_depth + 1)
 
     
