@@ -112,3 +112,9 @@ def get_chat_history(session_id: str):
         result = conn.execute(query, {"id": session_id})
         row = result.mappings().first()
         return row["history"] if row else None
+
+def delete_chat_history(session_id: str):
+    query = text("DELETE FROM chat_sessions WHERE session_id = :id")
+    with engine.connect() as conn:
+        conn.execute(query, {"id": session_id})
+        conn.commit()
