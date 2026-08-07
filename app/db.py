@@ -118,3 +118,16 @@ def delete_chat_history(session_id: str):
     with engine.connect() as conn:
         conn.execute(query, {"id": session_id})
         conn.commit()
+
+import json as json_lib
+
+def save_chat_history(session_id: str, history: list):
+    query = text("""
+        INSERT INTO chat_sessions (session_id, history, updated_at)
+        VALUES (:id, :history, NOW())
+        ON CONFLICT (session_id)
+        DO UPDATE SET history = :history, updated_at = NOW()
+    """)
+    with engine.connect() as conn:
+        conn.execute(query, {"id": session_id, "history": json_lib.dumps(history)})
+        conn.commit()
