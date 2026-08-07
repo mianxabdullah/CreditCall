@@ -110,6 +110,16 @@ def chat_turn(session_id: str, user_message: str, _depth: int = 0):
     if _depth == 0:
         history.append({"role": "user", "content": user_message}) # Add the user's message to the conversation history. This is done only on the initial call (depth 0) to avoid duplicating the user's message in recursive calls when the model asks for missing fields.
 
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=history,
+            tools=[SUBMIT_TOOL], # The model is provided with the submit_loan_application tool, which allows it to submit the loan application with the fields it has collected so far. The model can call this tool even if some fields are still missing, and the system will inform it of any missing fields so it can continue the conversation to collect them.
+            tool_choice="auto", # The model will automatically decide when to call the submit_loan_application tool based on the conversation context and the fields it has collected so far. This allows for a more natural interaction, as the model can determine the appropriate time to submit the application without requiring explicit instructions from the user.
+            temperature=0, # The temperature is set to 0 to make the model's responses more deterministic and focused, reducing randomness in its output. This is important for a loan application assistant, as we want consistent and reliable responses when collecting sensitive information from applicants.
+            max_tokens=1024 # The maximum number of tokens (words or word pieces) that the model can generate in its response is set to 1024. This ensures that the model has enough capacity to provide detailed responses and ask for any missing information without being cut off prematurely.
+        )
+    except Exception as e:
+        return {"type": "message", "text": f"(Assistant is having trouble responding right now: {str(e)})"}
+
     
-
-
