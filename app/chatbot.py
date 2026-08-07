@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
-from app.db import get_chat_history, delete_chat_history
+from app.db import get_chat_history, delete_chat_history, save_chat_history
+import json 
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -89,5 +90,26 @@ def get_or_create_conversation(session_id: str) -> list[dict]:
 
 def reset_conversation(session_id: str):
     delete_chat_history(session_id)    
+
+
+def chat_turn(session_id: str, user_message: str, _depth: int = 0):
+    """
+    Sends the user's message to Groq, manages the complete tool-calling workflow 
+    (including prompting for any missing loan application details), and saves 
+    conversation history to Postgres after every turn so chats persist across restarts 
+    and multiple server instances.    
+
+    Returns:
+      - {"type": "message", "text": "..."}            -> show this, keep chatting
+      - {"type": "ready_to_submit", "fields": {...}}    -> every field present
+    """
+    if _depth > 4:
+        return {"type": "message", "text": "Sorry, I'm having trouble processing that — could you try rephrasing?"}
+
+    history = get_or_create_conversation(session_id)
+    if _depth == 0:
+        history.append({"role": "user", "content": user_message}) # Add the user's message to the conversation history. This is done only on the initial call (depth 0) to avoid duplicating the user's message in recursive calls when the model asks for missing fields.
+
+    
 
 
