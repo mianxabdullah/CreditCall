@@ -18,4 +18,8 @@ class LoanApplication(BaseModel):
 # ApplicantUpdate is identical in shape to LoanApplication — reuse it directly, instead of duplicating every field again.
 ApplicantUpdate = LoanApplication
 
+class ChatMessage(BaseModel):
+    session_id: str
+    message: str
+
 
