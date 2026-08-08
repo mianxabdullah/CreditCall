@@ -13,7 +13,6 @@ import io
 from dotenv import load_dotenv
 
 
-
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
@@ -204,4 +203,11 @@ async def predict_loan_file(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.post("/chat", dependencies=[Depends(verify_api_key)])
+def chat(payload: ChatMessage):
+    try:
+        result = chat_turn(payload.session_id, payload.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")
 
