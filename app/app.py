@@ -229,5 +229,23 @@ def chat(payload: ChatMessage):
     prediction = model.predict(scaled_input)[0]
     probability = model.predict_proba(scaled_input)[0][1]
 
-    
+    applicant_id = save_applicant({
+        "gender": application.Gender,
+        "married": application.Married,
+        "dependents": application.Dependents,
+        "education": application.Education,
+        "self_employed": application.Self_Employed,
+        "applicant_income": application.ApplicantIncome,
+        "coapplicant_income": application.CoapplicantIncome,
+        "loan_amount": application.LoanAmount,
+        "loan_amount_term": application.Loan_Amount_Term,
+        "credit_history": application.Credit_History,
+        "property_area": application.Property_Area,
+    })
+
+    loan_status = "Approved" if prediction == 1 else "Rejected"
+    save_prediction(applicant_id, loan_status, round(float(probability), 4))
+
+
+
 
