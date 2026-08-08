@@ -1,14 +1,18 @@
-from fastapi import FastAPI, HTTPException, Header,Depends,UploadFile, File
-from app.schemas import LoanApplication , ApplicantUpdate
+from fastapi import FastAPI, HTTPException ,Header,Depends,UploadFile, File
+from pydantic import ValidationError #imported ValidationError from pydantic to handle validation errors when processing incoming data in the API endpoints.
 import pandas as pd
+from fastapi.responses import StreamingResponse
+from app.schemas import LoanApplication , ApplicantUpdate, ChatMessage #1. Imported the ChatMessage schema from app.schemas to handle chat messages in the API.
 from app.preprocess import preprocess 
 from app.db import (save_applicant, save_prediction, get_all_applicants,get_applicant_by_id, update_applicant,
                     delete_applicant,get_all_predictions,get_predictions_by_applicant)
+from app.chatbot import chat_turn,reset_conversation # imported the chat_turn and reset_conversation functions from app.chatbot to handle the chatbot interactions and manage the conversation state.
 import joblib
 import os
 import io
-from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
+
+
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
@@ -200,6 +204,4 @@ async def predict_loan_file(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
-
-
 
