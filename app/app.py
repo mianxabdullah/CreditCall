@@ -246,6 +246,13 @@ def chat(payload: ChatMessage):
     loan_status = "Approved" if prediction == 1 else "Rejected"
     save_prediction(applicant_id, loan_status, round(float(probability), 4))
 
+    reset_conversation(payload.session_id)  # conversation's done, clear it
 
+    return {
+        "type": "prediction",
+        "loan_status": loan_status,
+        "approval_probability": round(float(probability), 4),
+        "applicant_id": applicant_id
+    }
 
 
