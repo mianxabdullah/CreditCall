@@ -211,3 +211,16 @@ def chat(payload: ChatMessage):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")
 
+    if result["type"] == "message":
+        return {"type": "message", "text": result["text"]}
+
+    # Validate the collected data against the LoanApplication schema. If validation fails, return an error message to the user.
+    try:
+        application = LoanApplication(**result["fields"])
+    except ValidationError as e:
+        return {
+            "type": "message",
+            "text": "I collected your details but something didn't look right — could you double check and resend the last detail?"
+        }
+
+    
