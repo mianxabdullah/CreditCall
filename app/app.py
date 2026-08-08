@@ -223,4 +223,11 @@ def chat(payload: ChatMessage):
             "text": "I collected your details but something didn't look right — could you double check and resend the last detail?"
         }
 
+    # From here it's identical to /predict's logic — same preprocessing, same model, same DB writes. 
+    df = pd.DataFrame([application.model_dump()])
+    scaled_input, _ = preprocess(df, scaler, model_columns)
+    prediction = model.predict(scaled_input)[0]
+    probability = model.predict_proba(scaled_input)[0][1]
+
     
+
