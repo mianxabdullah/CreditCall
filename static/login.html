@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underwrite — Admin Sign-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1; --paper-raised: #faf6ec; --ink: #1e2a3a; --ink-soft: #5b6472;
+    --brass: #a9812e; --brass-soft: #cdb37a; --reject: #9b3b30; --rule: #d8cfba;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(169,129,46,0.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(30,42,58,0.05), transparent 45%),
+      var(--paper);
+    font-family: 'Inter', sans-serif; color: var(--ink); padding: 20px;
+  }
+  .panel {
+    width: 100%; max-width: 360px;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 1px 0 var(--brass-soft), 0 18px 40px -24px rgba(30,42,58,0.35);
+    padding: 34px 32px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem;
+    margin: 0 0 4px; letter-spacing: -0.01em;
+  }
+  h1 .mark { font-style: italic; color: var(--brass); }
+  .sub {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--brass); margin: 0 0 26px;
+  }
+  label { display: block; font-size: 0.82rem; font-weight: 500; margin-bottom: 6px; }
+  input {
+    width: 100%; padding: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem;
+    background: #fff; border: 1px solid var(--rule); border-radius: 2px; margin-bottom: 16px;
+  }
+  input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px rgba(169,129,46,0.15); }
+  button {
+    width: 100%; padding: 12px; background: var(--ink); color: var(--paper-raised); border: none;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+  }
+  button:hover { background: #2c3d54; }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  .error {
+    display: none; margin-top: 14px; padding: 10px 12px; background: #fbeeea;
+    border-left: 3px solid var(--reject); font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.76rem; color: var(--reject);
+  }
+  .error.show { display: block; }
+  .back {
+    display: block; text-align: center; margin-top: 20px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .back:hover { color: var(--brass); }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Under<span class="mark">write</span></h1>
+    <p class="sub">Admin Sign-in</p>
+
+    <form id="loginForm">
+      <label for="key">Access key</label>
+      <input type="password" id="key" autocomplete="off" required placeholder="Enter admin key">
+      <button type="submit" id="loginBtn">Sign In</button>
+      <div class="error" id="loginError"></div>
+    </form>
+
+    <a class="back" href="/static/index.html">&larr; Back to application form</a>
+  </div>
+
+<script>
+  const form = document.getElementById('loginForm');
+  const keyInput = document.getElementById('key');
+  const errorBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.className = 'error';
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+
+    const candidateKey = keyInput.value.trim();
+
+    try {
+      // Verify the key against a real protected endpoint. We don't have
+      // a dedicated "check auth" route, so we call a lightweight
+      // protected one and see whether it accepts the key.
+      const res = await fetch('/applicants/999999999', {
+        headers: { 'x-api-key': candidateKey }
+      });
+
+      // 404 means the key was accepted (route ran, just no such applicant).
+      // 401 means the key itself was rejected.
+      if (res.status === 401) {
+        errorBox.textContent = 'Incorrect access key.';
+        errorBox.classList.add('show');
+      } else {
+        sessionStorage.setItem('underwrite_admin_key', candidateKey);
+        window.location.href = '/static/history.html';
+      }
+    } catch (err) {
+      errorBox.textContent = 'Network error — ' + err.message;
+      errorBox.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  });
+</script>
+</body>
+</html>
