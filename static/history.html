@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underwrite — Admin: Case History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-raised: #faf6ec;
+    --ink: #1e2a3a;
+    --ink-soft: #5b6472;
+    --brass: #a9812e;
+    --brass-soft: #cdb37a;
+    --approve: #2e6e49;
+    --reject: #9b3b30;
+    --rule: #d8cfba;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 20px 80px;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(169,129,46,0.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(30,42,58,0.04), transparent 45%),
+      var(--paper);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .dossier { max-width: 960px; margin: 0 auto; }
+
+  .letterhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+  }
+  .letterhead h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .letterhead .mark { font-family: 'Fraunces', serif; font-style: italic; color: var(--brass); }
+  .nav-links { display: flex; gap: 18px; align-items: baseline; }
+  .nav-links a, .nav-links button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    background: none;
+    border-top: none; border-left: none; border-right: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .nav-links a:hover, .nav-links button:hover { color: var(--brass); border-color: var(--brass); }
+
+  .subline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 10px 0 28px;
+  }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 1px 0 var(--brass-soft), 0 18px 40px -24px rgba(30,42,58,0.35);
+    padding: 8px 0;
+    overflow-x: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(169,129,46,0.05); }
+
+  td.mono, th.mono-h { font-family: 'IBM Plex Mono', monospace; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .badge.approved { color: var(--approve); background: rgba(46,110,73,0.1); }
+  .badge.rejected { color: var(--reject); background: rgba(155,59,48,0.1); }
+
+  .empty, .loading, .error {
+    padding: 40px 20px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .error { color: var(--reject); }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .search-bar input {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .search-bar input:focus {
+    outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px rgba(169,129,46,0.15);
+  }
+  .search-bar button {
+    padding: 10px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--ink);
+    color: var(--paper-raised);
+    border: none;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .search-bar button:hover { background: #2c3d54; }
+  .or-divider {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .show-all-btn {
+    background: none !important;
+    border: 1px solid var(--rule) !important;
+    color: var(--ink-soft) !important;
+  }
+  .show-all-btn:hover { border-color: var(--brass) !important; color: var(--brass) !important; }
+
+  .table-toolbar {
+    display: flex; justify-content: flex-end; padding: 10px 16px 0;
+  }
+  .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+  .refresh {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .refresh:hover { border-color: var(--brass); color: var(--brass); }
+
+  .actions { display: flex; gap: 8px; }
+  .action-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 4px 9px;
+    cursor: pointer;
+    border-radius: 2px;
+    color: var(--ink-soft);
+  }
+  .action-btn.view:hover { border-color: var(--ink); color: var(--ink); }
+  .action-btn.edit:hover { border-color: var(--brass); color: var(--brass); }
+  .action-btn.delete:hover { border-color: var(--reject); color: var(--reject); }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(30,42,58,0.45);
+    align-items: center; justify-content: center;
+    padding: 20px;
+    z-index: 10;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.4);
+    max-width: 480px;
+    width: 100%;
+    padding: 28px 30px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    margin: 0 0 4px;
+  }
+  .modal .modal-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+  }
+  .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .modal label { display: block; font-size: 0.78rem; font-weight: 500; margin-bottom: 12px; }
+  .modal label span { display: block; margin-bottom: 4px; }
+  .modal input, .modal select {
+    width: 100%; padding: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+    background: #fff; border: 1px solid var(--rule); border-radius: 2px;
+  }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--brass); }
+  .modal-buttons { display: flex; gap: 10px; margin-top: 8px; }
+  .modal-buttons button {
+    flex: 1; padding: 11px; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.06em; border: none; cursor: pointer; border-radius: 2px;
+  }
+  .btn-save { background: var(--ink); color: #fff; }
+  .btn-save:hover { background: #2c3d54; }
+  .btn-cancel { background: none; border: 1px solid var(--rule) !important; color: var(--ink-soft); }
+  .btn-cancel:hover { border-color: var(--ink-soft) !important; }
+  .btn-edit-from-view { background: var(--brass); color: #fff; }
+  .btn-edit-from-view:hover { background: #8f6e26; }
+  .btn-delete-from-view { background: none; border: 1px solid var(--reject) !important; color: var(--reject); }
+  .btn-delete-from-view:hover { background: var(--reject); color: #fff; }
+  .modal-error {
+    display: none; margin-top: 12px; padding: 8px 10px; background: #fbeeea;
+    border-left: 3px solid var(--reject); font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem; color: var(--reject);
+  }
+  .modal-error.show { display: block; }
+
+  .not-found-msg {
+    display: none; margin-top: 4px; padding: 22px 16px; text-align: center;
+    background: rgba(30,42,58,0.04); border: 1px dashed var(--rule);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--ink-soft);
+  }
+  .not-found-msg.show { display: block; }
+
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; margin-bottom: 22px;
+  }
+  .detail-item { padding: 8px 0; border-bottom: 1px solid var(--rule); }
+  .detail-item .k {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); display: block; margin-bottom: 2px;
+  }
+  .detail-item .v { font-size: 0.86rem; }
+  .detail-item .v.mono { font-family: 'IBM Plex Mono', monospace; }
+
+  .history-list { margin-top: 4px; }
+  .history-list h3 {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-soft); border-bottom: 1px solid var(--rule);
+    padding-bottom: 8px; margin: 0 0 10px;
+  }
+  .history-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 0.82rem;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-row .date { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); }
+
+  @media (max-width: 700px) {
+    .card { overflow-x: scroll; }
+  }
+</style>
+</head>
+<body>
+<div class="dossier">
+
+  <div class="letterhead">
+    <h1>Under<span class="mark">write</span></h1>
+    <div class="nav-links">
+      <a href="/static/index.html">New Application</a>
+      <button id="signOutBtn">Sign Out</button>
+    </div>
+  </div>
+  <div class="subline">Credit Assessment Desk — Admin Panel</div>
+
+  <div class="search-bar">
+    <input type="number" id="searchId" placeholder="Search by case ID (e.g. 14)" min="1">
+    <button id="searchBtn">Search</button>
+    <span class="or-divider">or</span>
+    <button id="showAllBtn" class="show-all-btn">Show All Records</button>
+  </div>
+
+  <div class="card">
+    <div id="tableWrap">
+      <div class="empty">Enter a case ID above to look up one record, or click "Show All Records" to browse everything on file.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="viewModalBackdrop">
+  <div class="modal">
+    <h2>Case File</h2>
+    <p class="modal-sub" id="viewModalRef">Case #—</p>
+
+    <div class="detail-grid" id="viewDetailGrid"></div>
+
+    <div class="history-list" id="viewHistorySection">
+      <h3>Prediction History</h3>
+      <div id="viewHistoryList"></div>
+    </div>
+
+    <div class="modal-buttons">
+      <button type="button" class="btn-cancel" id="viewCloseBtn">Close</button>
+      <button type="button" class="btn-edit-from-view" id="viewEditBtn">Edit</button>
+      <button type="button" class="btn-delete-from-view" id="viewDeleteBtn">Delete</button>
+    </div>
+    <div class="modal-error" id="viewModalError"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h2>Amend Application</h2>
+    <p class="modal-sub" id="modalRef">Case #—</p>
+
+    <form id="editForm">
+      <div class="modal-row">
+        <label><span>Gender</span>
+          <select name="Gender"><option>Male</option><option>Female</option></select>
+        </label>
+        <label><span>Married</span>
+          <select name="Married"><option>Yes</option><option>No</option></select>
+        </label>
+        <label><span>Dependents</span>
+          <select name="Dependents"><option>0</option><option>1</option><option>2</option><option>3+</option></select>
+        </label>
+        <label><span>Education</span>
+          <select name="Education"><option>Graduate</option><option>Not Graduate</option></select>
+        </label>
+        <label><span>Self-employed</span>
+          <select name="Self_Employed"><option>No</option><option>Yes</option></select>
+        </label>
+        <label><span>Property area</span>
+          <select name="Property_Area"><option>Urban</option><option>Semiurban</option><option>Rural</option></select>
+        </label>
+        <label><span>Applicant income</span>
+          <input type="number" name="ApplicantIncome" required>
+        </label>
+        <label><span>Co-applicant income</span>
+          <input type="number" name="CoapplicantIncome" required>
+        </label>
+        <label><span>Loan amount</span>
+          <input type="number" name="LoanAmount" required>
+        </label>
+        <label><span>Loan term (days)</span>
+          <input type="number" name="Loan_Amount_Term" required>
+        </label>
+        <label><span>Credit history</span>
+          <select name="Credit_History">
+            <option value="1">Clean record (1)</option>
+            <option value="0">Adverse record (0)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn-save" id="saveBtn">Save Changes</button>
+      </div>
+      <div class="modal-error" id="modalError"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_KEY = sessionStorage.getItem('underwrite_admin_key');
+
+  // Gate: no key in this session -> back to login
+  if (!API_KEY) {
+    window.location.href = '/static/login.html';
+  }
+
+  const tableWrap = document.getElementById('tableWrap');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const searchId = document.getElementById('searchId');
+  const searchBtn = document.getElementById('searchBtn');
+  const showAllBtn = document.getElementById('showAllBtn');
+
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const editForm = document.getElementById('editForm');
+  const modalRef = document.getElementById('modalRef');
+  const modalError = document.getElementById('modalError');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const saveBtn = document.getElementById('saveBtn');
+
+  let currentEditId = null;
+
+  signOutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem('underwrite_admin_key');
+    window.location.href = '/static/login.html';
+  });
+
+  async function authedFetch(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { ...(options.headers || {}), 'x-api-key': API_KEY }
+    });
+    if (res.status === 401) {
+      sessionStorage.removeItem('underwrite_admin_key');
+      window.location.href = '/static/login.html';
+      throw new Error('Session expired');
+    }
+    return res;
+  }
+
+  async function loadHistory() {
+    tableWrap.innerHTML = '<div class="loading">Loading case history…</div>';
+
+    try {
+      const res = await authedFetch('/predictions');
+
+      if (!res.ok) {
+        tableWrap.innerHTML = `<div class="error">Could not load history (status ${res.status}).</div>`;
+        return;
+      }
+
+      const rows = await res.json();
+
+      if (!rows.length) {
+        tableWrap.innerHTML = '<div class="empty">No applications filed yet.</div>';
+        return;
+      }
+
+      const caseCount = `${rows.length} case${rows.length === 1 ? '' : 's'} on file`;
+
+      const tableRows = rows.map(r => {
+        const approved = r.loan_status === 'Approved';
+        const date = new Date(r.created_at).toLocaleString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        return `
+          <tr>
+            <td class="mono">#${r.applicant_id}</td>
+            <td><span class="badge ${approved ? 'approved' : 'rejected'}">${r.loan_status}</span></td>
+            <td class="mono">${(r.approval_probability * 100).toFixed(1)}%</td>
+            <td>${r.gender ?? '—'}</td>
+            <td class="mono">${r.applicant_income != null ? r.applicant_income.toLocaleString() : '—'}</td>
+            <td>${r.property_area ?? '—'}</td>
+            <td class="mono">${date}</td>
+            <td>
+              <div class="actions">
+                <button class="action-btn view" data-id="${r.applicant_id}">View</button>
+                <button class="action-btn edit" data-id="${r.applicant_id}">Edit</button>
+                <button class="action-btn delete" data-id="${r.applicant_id}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tableWrap.innerHTML = `
+        <div class="table-toolbar">
+          <span class="count">${caseCount}</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="mono-h">ID</th>
+              <th class="mono-h">Decision</th>
+              <th class="mono-h">Confidence</th>
+              <th class="mono-h">Gender</th>
+              <th class="mono-h">Income</th>
+              <th class="mono-h">Area</th>
+              <th class="mono-h">Filed</th>
+              <th class="mono-h">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      `;
+
+      tableWrap.querySelectorAll('.action-btn.view').forEach(btn => {
+        btn.addEventListener('click', () => openViewModal(btn.dataset.id));
+      });
+      tableWrap.querySelectorAll('.action-btn.edit').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+      });
+      tableWrap.querySelectorAll('.action-btn.delete').forEach(btn => {
+        btn.addEventListener('click', () => handleDelete(btn.dataset.id));
+      });
+
+    } catch (err) {
+      if (err.message !== 'Session expired') {
+        tableWrap.innerHTML = `<div class="error">Network error — ${err.message}</div>`;
+      }
+    }
+  }
+
+  const viewModalBackdrop = document.getElementById('viewModalBackdrop');
+  const viewModalRef = document.getElementById('viewModalRef');
+  const viewDetailGrid = document.getElementById('viewDetailGrid');
+  const viewHistoryList = document.getElementById('viewHistoryList');
+  const viewHistorySection = document.getElementById('viewHistorySection');
+  const viewModalError = document.getElementById('viewModalError');
+  const viewCloseBtn = document.getElementById('viewCloseBtn');
+  const viewEditBtn = document.getElementById('viewEditBtn');
+  const viewDeleteBtn = document.getElementById('viewDeleteBtn');
+  let currentViewId = null;
+
+  async function openViewModal(applicantId) {
+    currentViewId = applicantId;
+    viewModalError.className = 'modal-error';
+    viewDetailGrid.innerHTML = '';
+    viewHistoryList.innerHTML = '<div class="loading" style="padding:16px 0;">Loading…</div>';
+    viewModalRef.textContent = `Case #${applicantId}`;
+    viewModalBackdrop.classList.add('show');
+
+    try {
+      // Fetch the applicant's base record and their full prediction
+      // history in parallel — two separate endpoints, one detail view.
+      const [applicantRes, historyRes] = await Promise.all([
+        authedFetch(`/applicants/${applicantId}`),
+        authedFetch(`/predictions/${applicantId}`)
+      ]);
+
+      if (applicantRes.status === 404) {
+        viewDetailGrid.innerHTML = '';
+        viewHistoryList.innerHTML = '';
+        viewHistorySection.style.display = 'none';
+        viewModalError.className = 'not-found-msg show';
+        viewModalError.textContent = `No record found for case #${applicantId}.`;
+        viewEditBtn.style.display = 'none';
+        viewDeleteBtn.style.display = 'none';
+        return;
+      }
+
+      if (!applicantRes.ok) {
+        viewModalError.className = 'modal-error show';
+        viewModalError.textContent = 'Could not load applicant record.';
+        viewHistorySection.style.display = 'none';
+        viewEditBtn.style.display = 'none';
+        viewDeleteBtn.style.display = 'none';
+        return;
+      }
+
+      viewHistorySection.style.display = '';
+      viewEditBtn.style.display = '';
+      viewDeleteBtn.style.display = '';
+
+      const applicant = await applicantRes.json();
+      const history = historyRes.ok ? await historyRes.json() : [];
+
+      const fields = [
+        ['Gender', applicant.gender], ['Married', applicant.married],
+        ['Dependents', applicant.dependents], ['Education', applicant.education],
+        ['Self-employed', applicant.self_employed], ['Property area', applicant.property_area],
+        ['Applicant income', applicant.applicant_income?.toLocaleString()],
+        ['Co-applicant income', applicant.coapplicant_income?.toLocaleString()],
+        ['Loan amount', applicant.loan_amount?.toLocaleString()],
+        ['Loan term (days)', applicant.loan_amount_term],
+        ['Credit history', applicant.credit_history === 1 ? 'Clean record' : 'Adverse record'],
+        ['On file since', new Date(applicant.created_at).toLocaleDateString()]
+      ];
+      viewDetailGrid.innerHTML = fields.map(([k, v]) => `
+        <div class="detail-item">
+          <span class="k">${k}</span>
+          <span class="v mono">${v ?? '—'}</span>
+        </div>
+      `).join('');
+
+      if (!history.length) {
+        viewHistoryList.innerHTML = '<div class="empty" style="padding:10px 0;">No predictions recorded.</div>';
+      } else {
+        viewHistoryList.innerHTML = history.map(p => {
+          const approved = p.loan_status === 'Approved';
+          const date = new Date(p.created_at).toLocaleString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+          return `
+            <div class="history-row">
+              <span class="badge ${approved ? 'approved' : 'rejected'}">${p.loan_status}</span>
+              <span class="mono">${(p.approval_probability * 100).toFixed(1)}%</span>
+              <span class="date">${date}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      if (err.message !== 'Session expired') {
+        viewModalError.textContent = 'Network error — ' + err.message;
+        viewModalError.classList.add('show');
+      }
+    }
+  }
+
+  viewCloseBtn.addEventListener('click', () => viewModalBackdrop.classList.remove('show'));
+
+  viewEditBtn.addEventListener('click', () => {
+    if (!currentViewId) return;
+    viewModalBackdrop.classList.remove('show');
+    openEditModal(currentViewId);
+  });
+
+  viewDeleteBtn.addEventListener('click', async () => {
+    if (!currentViewId) return;
+    if (!confirm(`Delete applicant #${currentViewId}? This also removes their prediction history.`)) return;
+
+    try {
+      const res = await authedFetch(`/applicants/${currentViewId}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        viewModalBackdrop.classList.remove('show');
+      } else if (res.status === 409) {
+        alert('Cannot delete — this applicant still has linked records.');
+      } else {
+        alert(`Delete failed (status ${res.status}).`);
+      }
+    } catch (err) {
+      if (err.message !== 'Session expired') alert('Error: ' + err.message);
+    }
+  });
+
+  async function openEditModal(applicantId) {
+    modalError.className = 'modal-error';
+    try {
+      const res = await authedFetch(`/applicants/${applicantId}`);
+      if (!res.ok) {
+        alert('Could not load applicant details.');
+        return;
+      }
+      const applicant = await res.json();
+
+      currentEditId = applicantId;
+      modalRef.textContent = `Case #${applicantId}`;
+
+      editForm.Gender.value = applicant.gender;
+      editForm.Married.value = applicant.married;
+      editForm.Dependents.value = applicant.dependents;
+      editForm.Education.value = applicant.education;
+      editForm.Self_Employed.value = applicant.self_employed;
+      editForm.Property_Area.value = applicant.property_area;
+      editForm.ApplicantIncome.value = applicant.applicant_income;
+      editForm.CoapplicantIncome.value = applicant.coapplicant_income;
+      editForm.LoanAmount.value = applicant.loan_amount;
+      editForm.Loan_Amount_Term.value = applicant.loan_amount_term;
+      editForm.Credit_History.value = String(applicant.credit_history);
+
+      modalBackdrop.classList.add('show');
+    } catch (err) {
+      if (err.message !== 'Session expired') alert('Error: ' + err.message);
+    }
+  }
+
+  cancelBtn.addEventListener('click', () => {
+    modalBackdrop.classList.remove('show');
+    currentEditId = null;
+  });
+
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    modalError.className = 'modal-error';
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    const fd = new FormData(editForm);
+    const payload = {
+      Gender: fd.get('Gender'),
+      Married: fd.get('Married'),
+      Dependents: fd.get('Dependents'),
+      Education: fd.get('Education'),
+      Self_Employed: fd.get('Self_Employed'),
+      ApplicantIncome: parseFloat(fd.get('ApplicantIncome')),
+      CoapplicantIncome: parseFloat(fd.get('CoapplicantIncome')),
+      LoanAmount: parseFloat(fd.get('LoanAmount')),
+      Loan_Amount_Term: parseFloat(fd.get('Loan_Amount_Term')),
+      Credit_History: parseInt(fd.get('Credit_History')),
+      Property_Area: fd.get('Property_Area')
+    };
+
+    try {
+      const res = await authedFetch(`/applicants/${currentEditId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        modalError.textContent = typeof data.detail === 'string' ? data.detail : 'Could not save changes.';
+        modalError.classList.add('show');
+      } else {
+        modalBackdrop.classList.remove('show');
+        currentEditId = null;
+        // Only refresh the full table if it was already on screen —
+        // don't force it to load just because an edit happened via search.
+        if (tableWrap.querySelector('table')) loadHistory();
+      }
+    } catch (err) {
+      if (err.message !== 'Session expired') {
+        modalError.textContent = 'Network error — ' + err.message;
+        modalError.classList.add('show');
+      }
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
+  });
+
+  async function handleDelete(applicantId) {
+    if (!confirm(`Delete applicant #${applicantId}? This also removes their prediction history.`)) return;
+
+    try {
+      const res = await authedFetch(`/applicants/${applicantId}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        loadHistory();
+      } else if (res.status === 409) {
+        alert('Cannot delete — this applicant still has linked records.');
+      } else {
+        alert(`Delete failed (status ${res.status}).`);
+      }
+    } catch (err) {
+      if (err.message !== 'Session expired') alert('Error: ' + err.message);
+    }
+  }
+
+  searchBtn.addEventListener('click', () => {
+    const id = searchId.value.trim();
+    if (!id) return;
+    openViewModal(id);
+  });
+
+  searchId.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchBtn.click();
+  });
+
+  showAllBtn.addEventListener('click', loadHistory);
+</script>
+</body>
+</html>
