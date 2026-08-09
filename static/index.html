@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underwrite — Loan Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3ede1;
+    --paper-raised: #faf6ec;
+    --ink: #1e2a3a;
+    --ink-soft: #5b6472;
+    --brass: #a9812e;
+    --brass-soft: #cdb37a;
+    --approve: #2e6e49;
+    --reject: #9b3b30;
+    --rule: #d8cfba;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 20px 80px;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(169,129,46,0.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(30,42,58,0.04), transparent 45%),
+      var(--paper);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .dossier {
+    max-width: 640px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Letterhead */
+  .letterhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+  }
+  .letterhead h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .letterhead .mark {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--brass);
+  }
+  .ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.5;
+  }
+  .ref span { display: block; }
+  .ref b { color: var(--ink); font-weight: 600; }
+
+  .subline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 10px 0 28px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 1px 0 var(--brass-soft), 0 18px 40px -24px rgba(30,42,58,0.35);
+    padding: 36px 40px 32px;
+  }
+
+  fieldset {
+    border: none;
+    margin: 0 0 26px;
+    padding: 0;
+  }
+  fieldset:last-of-type { margin-bottom: 8px; }
+
+  legend {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 0 0 8px;
+    margin-bottom: 12px;
+    width: 100%;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  label span.field-name { display: block; margin-bottom: 5px; }
+
+  input, select {
+    width: 100%;
+    padding: 9px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(169,129,46,0.15);
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 6px;
+    background: var(--ink);
+    color: var(--paper-raised);
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: #2c3d54; }
+  button:disabled { opacity: 0.55; cursor: wait; }
+
+  /* Verdict stamp */
+  .verdict-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .stamp {
+    position: absolute;
+    top: -26px;
+    right: 18px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    border: 4px double currentColor;
+    border-radius: 4px;
+    transform: rotate(-9deg) scale(0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.38s cubic-bezier(.2,1.6,.4,1), opacity 0.2s ease;
+    background: rgba(255,255,255,0.4);
+  }
+  .stamp.show {
+    opacity: 0.92;
+    transform: rotate(-9deg) scale(1);
+  }
+  .stamp.approved { color: var(--approve); }
+  .stamp.rejected { color: var(--reject); }
+
+  .receipt {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    display: none;
+  }
+  .receipt.show { display: block; }
+  .receipt div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .receipt b { color: var(--ink); font-weight: 600; }
+
+  .error-note {
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: #fbeeea;
+    border-left: 3px solid var(--reject);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--reject);
+    display: none;
+  }
+  .error-note.show { display: block; }
+
+  .batch-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 30px 0 18px;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .batch-divider::before, .batch-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .batch-form label.field-name {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+  .file-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .file-row input[type="file"] {
+    flex: 1;
+    padding: 8px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .file-row button {
+    width: auto;
+    margin-top: 0;
+    padding: 10px 18px;
+    white-space: nowrap;
+    background: var(--brass);
+    color: #fff;
+  }
+  .file-row button:hover { background: #8f6e26; }
+
+  .batch-status {
+    margin-top: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    display: none;
+  }
+  .batch-status.show { display: block; }
+  .batch-status a {
+    color: var(--approve);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid var(--approve);
+  }
+
+  @media (max-width: 520px) {
+    .row { grid-template-columns: 1fr; }
+    .card { padding: 26px 22px; }
+    .letterhead { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .ref { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="dossier">
+
+  <div class="letterhead">
+    <h1>Under<span class="mark">write</span></h1>
+    <div class="ref">
+      <span>Application Ref.</span>
+      <b id="refNumber">LN-2026-00000</b>
+      <a href="/static/history.html" style="color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--rule);">Case History &rarr;</a>
+      <a href="/static/chat.html" style="color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--rule);margin-left:10px;">Talk to Assistant &rarr;</a>
+    </div>
+  </div>
+  <div class="subline">Credit Assessment Desk — Automated Preliminary Review</div>
+
+  <div class="card">
+    <form id="loanForm">
+
+      <fieldset>
+        <legend>Applicant</legend>
+        <div class="row">
+          <label><span class="field-name">Gender</span>
+            <select name="Gender"><option>Male</option><option>Female</option></select>
+          </label>
+          <label><span class="field-name">Marital status</span>
+            <select name="Married"><option>Yes</option><option>No</option></select>
+          </label>
+          <label><span class="field-name">Education</span>
+            <select name="Education"><option>Graduate</option><option>Not Graduate</option></select>
+          </label>
+          <label><span class="field-name">Self-employed</span>
+            <select name="Self_Employed"><option>No</option><option>Yes</option></select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Household</legend>
+        <div class="row">
+          <label><span class="field-name">Dependents</span>
+            <select name="Dependents"><option>0</option><option>1</option><option>2</option><option>3+</option></select>
+          </label>
+          <label><span class="field-name">Property area</span>
+            <select name="Property_Area"><option>Urban</option><option>Semiurban</option><option>Rural</option></select>
+          </label>
+          <label><span class="field-name">Applicant income / mo.</span>
+            <input type="number" name="ApplicantIncome" value="5000" required>
+          </label>
+          <label><span class="field-name">Co-applicant income / mo.</span>
+            <input type="number" name="CoapplicantIncome" value="0" required>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Loan details</legend>
+        <div class="row">
+          <label><span class="field-name">Loan amount (thousands)</span>
+            <input type="number" name="LoanAmount" value="150" required>
+          </label>
+          <label><span class="field-name">Term (days)</span>
+            <input type="number" name="Loan_Amount_Term" value="360" required>
+          </label>
+          <label><span class="field-name">Credit history</span>
+            <select name="Credit_History">
+              <option value="1">Clean record (1)</option>
+              <option value="0">Adverse record (0)</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit" id="submitBtn">File Application</button>
+
+      <div class="verdict-wrap">
+        <div class="stamp" id="stamp"></div>
+      </div>
+
+      <div class="receipt" id="receipt"></div>
+      <div class="error-note" id="errorNote"></div>
+    </form>
+
+    <div class="batch-divider">
+      <span>Batch Filing</span>
+    </div>
+
+    <form id="batchForm" class="batch-form">
+      <label class="field-name" style="margin-bottom:8px;">Upload a CSV of applicants for bulk review</label>
+      <div class="file-row">
+        <input type="file" id="csvFile" name="file" accept=".csv" required>
+        <button type="submit" id="batchBtn">Process Batch</button>
+      </div>
+      <div class="error-note" id="batchError"></div>
+      <div class="batch-status" id="batchStatus"></div>
+    </form>
+  </div>
+</div>
+<script>
+  const API_KEY = "helloabd"; 
+
+  const form = document.getElementById('loanForm');
+  const stamp = document.getElementById('stamp');
+  const receipt = document.getElementById('receipt');
+  const errorNote = document.getElementById('errorNote');
+  const submitBtn = document.getElementById('submitBtn');
+
+  document.getElementById('refNumber').textContent =
+    'LN-2026-' + Math.floor(10000 + Math.random() * 89999);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    stamp.className = 'stamp';
+    receipt.className = 'receipt';
+    errorNote.className = 'error-note';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Reviewing…';
+
+    const fd = new FormData(form);
+    const payload = {
+      Gender: fd.get('Gender'),
+      Married: fd.get('Married'),
+      Dependents: fd.get('Dependents'),
+      Education: fd.get('Education'),
+      Self_Employed: fd.get('Self_Employed'),
+      ApplicantIncome: parseFloat(fd.get('ApplicantIncome')),
+      CoapplicantIncome: parseFloat(fd.get('CoapplicantIncome')),
+      LoanAmount: parseFloat(fd.get('LoanAmount')),
+      Loan_Amount_Term: parseFloat(fd.get('Loan_Amount_Term')),
+      Credit_History: parseInt(fd.get('Credit_History')),
+      Property_Area: fd.get('Property_Area')
+    };
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorNote.textContent = (typeof data.detail === 'string' ? data.detail : 'Request could not be processed.');
+        errorNote.classList.add('show');
+      } else {
+        const approved = data.loan_status === 'Approved';
+        stamp.textContent = approved ? 'Approved' : 'Declined';
+        stamp.classList.add(approved ? 'approved' : 'rejected', 'show');
+
+        receipt.innerHTML = `
+          <div><span>Decision</span><b>${data.loan_status}</b></div>
+          <div><span>Model confidence</span><b>${(data.approval_probability * 100).toFixed(1)}%</b></div>
+        `;
+        receipt.classList.add('show');
+      }
+    } catch (err) {
+      errorNote.textContent = 'Network error — ' + err.message;
+      errorNote.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'File Application';
+    }
+  });
+
+  // --- Batch upload ---
+  const batchForm = document.getElementById('batchForm');
+  const batchBtn = document.getElementById('batchBtn');
+  const batchStatus = document.getElementById('batchStatus');
+  const batchError = document.getElementById('batchError');
+
+  batchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    batchStatus.className = 'batch-status';
+    batchError.className = 'error-note';
+    const fileInput = document.getElementById('csvFile');
+    if (!fileInput.files.length) return;
+
+    batchBtn.disabled = true;
+    batchBtn.textContent = 'Processing…';
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    try {
+      const res = await fetch('/predict_file', {
+        method: 'POST',
+        headers: { 'x-api-key': API_KEY }, // no Content-Type — browser sets multipart boundary itself
+        body: formData
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        const msg = typeof data.detail === 'string' ? data.detail : (data.detail?.message || 'Batch processing failed.');
+        batchError.textContent = msg;
+        batchError.classList.add('show');
+      } else {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        batchStatus.innerHTML = `Batch processed. <a href="${url}" download="predictions.csv">Download results (predictions.csv)</a>`;
+        batchStatus.classList.add('show');
+      }
+    } catch (err) {
+      batchError.textContent = 'Network error — ' + err.message;
+      batchError.classList.add('show');
+    } finally {
+      batchBtn.disabled = false;
+      batchBtn.textContent = 'Process Batch';
+      fileInput.value = '';
+    }
+  });
+</script>
+</body>
+</html>
