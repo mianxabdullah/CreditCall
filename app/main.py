@@ -11,7 +11,7 @@ import joblib
 import os
 import io
 from dotenv import load_dotenv
-
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
@@ -21,6 +21,7 @@ def verify_api_key(x_api_key: str = Header(...)): # Added authentication to the 
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 app = FastAPI(title="Loan Approval API")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 model = joblib.load('models/loan_model.pkl')
 scaler = joblib.load('models/scaler.pkl')
