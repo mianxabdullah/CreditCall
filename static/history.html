@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Underwrite — Admin: Case History</title>
+<title>CreditCall — Admin: Case History</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -313,7 +313,7 @@
 <div class="dossier">
 
   <div class="letterhead">
-    <h1>Under<span class="mark">write</span></h1>
+    <h1>Credit<span class="mark">Call</span></h1>
     <div class="nav-links">
       <a href="/static/index.html">New Application</a>
       <button id="signOutBtn">Sign Out</button>
@@ -411,7 +411,7 @@
 </div>
 
 <script>
-  const API_KEY = sessionStorage.getItem('underwrite_admin_key');
+  const API_KEY = sessionStorage.getItem('creditcall_admin_key');
 
   // Gate: no key in this session -> back to login
   if (!API_KEY) {
@@ -434,7 +434,7 @@
   let currentEditId = null;
 
   signOutBtn.addEventListener('click', () => {
-    sessionStorage.removeItem('underwrite_admin_key');
+    sessionStorage.removeItem('creditcall_admin_key');
     window.location.href = '/static/login.html';
   });
 
@@ -444,7 +444,7 @@
       headers: { ...(options.headers || {}), 'x-api-key': API_KEY }
     });
     if (res.status === 401) {
-      sessionStorage.removeItem('underwrite_admin_key');
+      sessionStorage.removeItem('creditcall_admin_key');
       window.location.href = '/static/login.html';
       throw new Error('Session expired');
     }

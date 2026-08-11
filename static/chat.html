@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Underwrite — Talk to an Assistant</title>
+<title>CreditCall — Talk to an Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -107,7 +107,7 @@
 <div class="dossier">
 
   <div class="letterhead">
-    <h1>Under<span class="mark">write</span></h1>
+    <h1>Credit<span class="mark">Call</span></h1>
     <a href="/static/index.html">Use the form instead &rarr;</a>
   </div>
   <div class="subline">Credit Assessment Desk — Speak With an Assistant</div>
@@ -127,10 +127,10 @@
 
   // A fresh session id per browser tab session, so the backend can track
   // this conversation's collected fields separately from anyone else's.
-  let sessionId = sessionStorage.getItem('underwrite_chat_session');
+  let sessionId = sessionStorage.getItem('creditcall_chat_session');
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    sessionStorage.setItem('underwrite_chat_session', sessionId);
+    sessionStorage.setItem('creditcall_chat_session', sessionId);
   }
 
   const messagesEl = document.getElementById('messages');
