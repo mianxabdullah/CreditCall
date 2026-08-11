@@ -28,7 +28,7 @@ FIELD_LABELS = {
 }
 
 SYSTEM_PROMPT = """
-You are a loan officer assistant for Underwrite, a loan
+You are a loan officer assistant for CreditCall, a loan
 approval service. You must collect ALL 11 of the following fields from
 the applicant, explicitly, before doing anything else:
 
