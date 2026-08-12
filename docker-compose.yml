@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Abdsep03
+      POSTGRES_DB: creditcall_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once, only on a brand-new (empty) data volume, to create
+      # the applicants/predictions/chat_sessions tables automatically.
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Inside Docker's network, containers reach each other by service
+      # name ("db"), not "localhost" — this is a common trap when
+      # moving a project from local dev into Docker.
+      DATABASE_URL: postgresql://postgres:Abdsep03@db:5432/creditcall_db
+      API_KEY: ${API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    depends_on:
+      db:
+        # Waits for the healthcheck above to pass, not just for the
+        # container to start — Postgres can take a few seconds after
+        # starting before it's actually ready to accept connections.
+        condition: service_healthy
+
+volumes:
+  pgdata:
